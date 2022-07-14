@@ -1,29 +1,39 @@
-const { RuntimeArgs, CLValueBuilder, Contracts, CasperClient, DeployUtil, CLPublicKey, Keys } = require('casper-js-sdk')
+const { RuntimeArgs, CLValueBuilder, Contracts, CasperClient, DeployUtil, CLPublicKey, Keys, CLValue, CLType } = require('casper-js-sdk')
+const { Option, Some } = require('ts-results')
 const fs = require('fs')
 const client = new CasperClient("http://136.243.187.84:7777/rpc")
 const contract = new Contracts.Contract(client)
 
+const keyPairFilePath = "secret_key_2.pem"
 const keys = getKeys()
 const network = "casper-test"
 
+var collection_name = "Ready Player Casper Hackathon - Proof-of-Victory NFTs"
+var collection_symbol = "RPC-PoV"
+
+
 async function installContract() {
 
+  const zero = new Some(CLValueBuilder.u8(0))
+
   const args = RuntimeArgs.fromMap({
-    "collection_name": CLValueBuilder.string("Ready Player Casper Hackathon - Proof-of-Victory NFTs"),
-    "collection_symbol": CLValueBuilder.string("RPC-PoV"),
+    "collection_name": CLValueBuilder.string(collection_name),
+    "collection_symbol": CLValueBuilder.string(collection_symbol),
     "total_token_supply": CLValueBuilder.u64(11),
     "ownership_mode": CLValueBuilder.u8(1),
     "nft_kind": CLValueBuilder.u8(1),
-    "holder_mode": CLValueBuilder.u8(0),
+    "holder_mode": CLValueBuilder.option(zero),
     "nft_metadata_kind": CLValueBuilder.u8(0),
+    "json_schema": CLValueBuilder.string("nft-schema"),
     "identifier_mode": CLValueBuilder.u8(1),
-    "metadata_mutability": CLValueBuilder.u8(0),
+    "metadata_mutability": CLValueBuilder.u8(0)
   });
+
 
   const deploy = contract.install(
     getWasm("contract.wasm"),
     args,
-    "10000000000", //10 CSPR
+    "300000000000", //300 CSPR
     keys.publicKey,
     network,
     [keys]
@@ -48,9 +58,9 @@ async function installContract() {
 
 async function mint() {
   const args = RuntimeArgs.fromMap({
-    "nft_contract_hash": CLValueBuilder.string("<contract_hash>"),
-    "token_owner": CLValueBuilder.string("01830c0abc927f0df72866a0cdc32a9de12e90b0288b0f7ec76fd4fb942c17eb78"),
-    "token_meta_data": CLValueBuilder.string("https://gateway.pinata.cloud/ipfs/QmTCZf8VSprf3qS2jQfShLRLZXNgkX64bWYrmhCZ3JPMEg/AlexNikitin.png")
+    "nft_contract_hash": CLValueBuilder.string("910f52dc86877c1c3376a97fe69327dfaa29ff5fdaee774bfc5dcac50dbfc1ca"),
+    "token_owner": CLValueBuilder.string("0177a214d1c6ebdcf9f5f5e977236f3f904613eb9dcd76da61aaa64beec4c349c5"),
+    "token_meta_data": CLValueBuilder.string("")
   });
 
   const deploy = contract.install(
@@ -80,7 +90,7 @@ async function mint() {
 }
 
 function getKeys() {
-  return Keys.Ed25519.loadKeyPairFromPrivateFile("secret_key.pem")
+  return Keys.Ed25519.loadKeyPairFromPrivateFile(keyPairFilePath)
 }
 
 function getWasm(file) {
